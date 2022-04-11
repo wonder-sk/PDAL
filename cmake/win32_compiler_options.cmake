@@ -65,7 +65,12 @@ endfunction()
 #
 # Windows htonl and similar are in winsock :(
 #
-set(WINSOCK_LIBRARY ws2_32)
+set(WINSOCK_LIBRARY ws2_32
+    \EXPORT:__imp_htonl
+    \EXPORT:__imp_ntohl
+    \EXPORT:__imp_htons
+    \EXPORT:__imp_ntohs
+)
 
 IF(DEFINED ENV{OSGEO4W_HOME})
 	set(CMAKE_INCLUDE_PATH "c:/OSGeo4W64/include;$ENV{CMAKE_INCLUDE_PATH}")
