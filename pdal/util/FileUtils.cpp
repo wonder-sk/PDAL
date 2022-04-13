@@ -82,11 +82,11 @@ std::string addTrailingSlash(std::string path)
 }
 
 #ifdef PDAL_WIN32_STL
-std::wstring toNative(std::string const& in)
+std::wstring toNative(const std::string& in)
 {
-    int len = MultiByteToWideChar(CP_ACP, 0, in.data(), in.length(), nullptr, 0);
+    int len = MultiByteToWideChar(CP_UTF8, 0, in.data(), in.length(), nullptr, 0);
     std::wstring out(len, 0);
-    if (MultiByteToWideChar(CP_ACP, 0, in.data(), in.length(), out.data(), len))
+    if (MultiByteToWideChar(CP_UTF8, 0, in.data(), in.length(), out.data(), len))
     {
         int err = GetLastError();
         char buf[200] {};
@@ -95,6 +95,21 @@ std::wstring toNative(std::string const& in)
     }
     return out;
 }
+
+std::string fromNative(const std::wstring& in)
+{
+    int len = WideCharToMultiByte(CP_UTF8, 0, in.data(), in.length(), nullptr, 0, nullptr, nullptr);
+    std::string out(len, 0);
+    if (WideCharToMultiByte(CP_UTF8, 0, in.data(), in.length(), out.data(), len), nullptr, nullptr))
+    {
+        int err = GetLastError();
+        char buf[200] {};
+        len = FormatMessageA(0, 0, GetLastError(), 0, buf, 199, 0);
+        throw pdal_error("Can't convert string: " + std::string_view(buf, len));
+    }
+    return out;
+}
+
 #else // Unix, OSX, MinGW
 std::string const& toNative(std::string const& in)
 {
@@ -450,13 +465,6 @@ std::vector<std::string> glob(std::string path)
 
 #ifdef _WIN32
 #ifdef PDAL_WIN32_STL
-    auto fromNative = [](std::wstring const& in) -> std::string
-    {
-        std::wstring_convert<std::codecvt_utf8_utf16<unsigned short>, unsigned short> convert;
-        auto p = reinterpret_cast<unsigned short const*>(in.data());
-        return convert.to_bytes(p, p + in.size());
-    };
-
     std::wstring wpath(toNative(path));
     WIN32_FIND_DATAW ffd;
     HANDLE handle = FindFirstFileW(wpath.c_str(), &ffd);
@@ -473,7 +481,8 @@ std::vector<std::string> glob(std::string path)
         if (found == std::wstring::npos)
             filenames.push_back(fromNative(ffd.cFileName));
         else
-            filenames.push_back(fromNative(wpath.substr(0, found)) + "\\" + fromNative(ffd.cFileName));
+            filenames.push_back(fromNative(wpath.substr(0, found)) + "\\" +
+                fromNative(ffd.cFileName));
 
     } while (FindNextFileW(handle, &ffd) != 0);
     FindClose(handle);
