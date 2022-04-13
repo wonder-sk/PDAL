@@ -84,11 +84,16 @@ std::string addTrailingSlash(std::string path)
 #ifdef PDAL_WIN32_STL
 std::wstring toNative(std::string const& in)
 {
-    // TODO: C++11 define convert with static thread_local
-    std::wstring_convert<std::codecvt_utf8_utf16<uint16_t>, uint16_t> convert;
-    auto s = convert.from_bytes(in);
-    auto p = reinterpret_cast<wchar_t const*>(s.data());
-    return std::wstring(p, p + s.size());
+    int len = MultiByteToWideChar(CP_ACP, 0, in.data(), in.length(), nullptr, 0);
+    std::wstring out(len, 0);
+    if (MultiByteToWideChar(CP_ACP, 0, in.data(), in.length(), out.data(), len))
+    {
+        int err = GetLastError();
+        char buf[200] {};
+        len = FormatMessageA(0, 0, GetLastError(), 0, buf, 199, 0);
+        throw pdal_error("Can't convert string: " + std::string_view(buf, len));
+    }
+    return out;
 }
 #else // Unix, OSX, MinGW
 std::string const& toNative(std::string const& in)
