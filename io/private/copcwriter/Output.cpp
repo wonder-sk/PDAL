@@ -94,7 +94,7 @@ Output::Output(const BaseInfo& b) : b(b)
         if (i <= 5)
         {
             if (m_header.points_by_return_14[i] <= (std::numeric_limits<uint32_t>::max)())
-                m_header.points_by_return[i - 1] = m_header.points_by_return_14[i - 1];
+                m_header.points_by_return[i - 1] = (uint32_t)m_header.points_by_return_14[i - 1];
             else
                 m_header.points_by_return[i - 1] = 0;
         }

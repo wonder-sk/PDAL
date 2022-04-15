@@ -49,8 +49,6 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-
-
 #include <pdal/util/FileUtils.hpp>
 #include <pdal/util/Utils.hpp>
 #include <pdal/pdal_types.hpp>
@@ -84,28 +82,33 @@ std::string addTrailingSlash(std::string path)
 #ifdef PDAL_WIN32_STL
 std::wstring toNative(const std::string& in)
 {
+    if (in.empty())
+        return std::wstring();
+
     int len = MultiByteToWideChar(CP_UTF8, 0, in.data(), in.length(), nullptr, 0);
     std::wstring out(len, 0);
-    if (MultiByteToWideChar(CP_UTF8, 0, in.data(), in.length(), out.data(), len))
+    if (MultiByteToWideChar(CP_UTF8, 0, in.data(), in.length(), out.data(), len) == 0)
     {
-        int err = GetLastError();
         char buf[200] {};
         len = FormatMessageA(0, 0, GetLastError(), 0, buf, 199, 0);
-        throw pdal_error("Can't convert string: " + std::string_view(buf, len));
+        throw pdal_error("Can't convert UTF8 to UTF16: " + std::string(buf, len));
     }
     return out;
 }
 
 std::string fromNative(const std::wstring& in)
 {
+    if (in.empty())
+        return std::string();
+
     int len = WideCharToMultiByte(CP_UTF8, 0, in.data(), in.length(), nullptr, 0, nullptr, nullptr);
     std::string out(len, 0);
-    if (WideCharToMultiByte(CP_UTF8, 0, in.data(), in.length(), out.data(), len), nullptr, nullptr))
+    if (WideCharToMultiByte(CP_UTF8, 0, in.data(), in.length(), out.data(), len, nullptr, nullptr) == 0)
     {
         int err = GetLastError();
         char buf[200] {};
         len = FormatMessageA(0, 0, GetLastError(), 0, buf, 199, 0);
-        throw pdal_error("Can't convert string: " + std::string_view(buf, len));
+        throw pdal_error("Can't convert UTF16 to UTF8: " + std::string(buf, len));
     }
     return out;
 }

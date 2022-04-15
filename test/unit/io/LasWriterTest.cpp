@@ -52,6 +52,9 @@
 
 #include "Support.hpp"
 
+#pragma warning (push)
+#pragma warning (disable: 4996)
+
 namespace pdal
 {
 
@@ -72,11 +75,6 @@ public:
         std::string description, std::vector<uint8_t>& data)
         { w.addVlr(userId, recordId, description, data); }
 };
-
-} // namespace pdal
-
-using namespace pdal;
-
 
 TEST(LasWriterTest, srs)
 {
@@ -413,7 +411,6 @@ TEST(LasWriterTest, extra_dims)
     writer.prepare(table);
     PointViewSet viewSet = writer.execute(table);
 
-    LasTester tester;
     PointViewPtr pb = *viewSet.begin();
 
     uint16_t colors[][3] = {
@@ -1676,3 +1673,6 @@ TEST(LasWriterTest, issue3652)
     }
 }
 
+} // namespace pdal
+
+#pragma warning (pop)

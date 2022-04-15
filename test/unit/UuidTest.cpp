@@ -40,17 +40,24 @@ using namespace pdal;
 
 TEST(UuidTest, test)
 {
+	std::cerr << "Started!\n";
     std::string s("5CE0E9A5-6015-FEC5-AADF-A328AE398115");
+    std::cerr << "Set string!\n";
     unsigned char id[16] = {0x5c, 0xe0, 0xe9, 0xa5, 0x60, 0x15, 0xfe, 0xc5,
                             0xaa, 0xdf, 0xa3, 0x28, 0xae, 0x39, 0x81, 0x15 };
+    std::cerr << "Set data!\n";
     Uuid uuid((char *)id);
+    std::cerr << "Made uuid!\n";
     EXPECT_EQ(uuid.toString(), s);
+    std::cerr << "Checked string!\n";
 
     Uuid uuid2(s);
+    std::cerr << "Made from string!\n";
     unsigned char buf[16];
     uuid2.pack((char *)buf);
     for (size_t i = 0; i < 16; ++i)
         EXPECT_EQ(id[i], buf[i]);
+    std::cerr << "Compared!\n";
 }
 
 TEST(UuidTest, initialization)

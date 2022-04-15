@@ -39,10 +39,10 @@ target_link_libraries(${PDAL_UTIL_LIB_NAME}
         ${BACKTRACE_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
 )
-target_link_options(${PDAL_UTIL_LIB_NAME}
-    PRIVATE
-    	${WINSOCK_EXPORTS}
-)
+#target_link_options(${PDAL_UTIL_LIB_NAME}
+#    PRIVATE
+#    	${WINSOCK_EXPORTS}
+#)
 
 set_target_properties(${PDAL_UTIL_LIB_NAME} PROPERTIES
     VERSION "${PDAL_BUILD_VERSION}"

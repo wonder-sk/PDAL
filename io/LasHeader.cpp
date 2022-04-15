@@ -487,7 +487,12 @@ Dimension::IdList LasHeader::usedDims() const
 
 const LasVLR *LasHeader::findVlr(const std::string& userId, uint16_t recordId) const
 {
-    for (const LasVLR& v : vlrs())
+    // Update interface VLRs before searching.
+    d->interfaceVlrs.clear();
+    for (las::Vlr& v : d->vlrs)
+        d->interfaceVlrs.emplace_back(&v);
+
+    for (const LasVLR& v : d->interfaceVlrs)
         if (v.matches(userId, recordId))
             return &v;
     return nullptr;
@@ -511,6 +516,7 @@ void LasHeader::initialize(LogPtr log, uintmax_t fileSize, bool nosrs)
     (void)nosrs;
 }
 
+// Deprecated
 const VlrList& LasHeader::vlrs() const
 {
     d->interfaceVlrs.clear();

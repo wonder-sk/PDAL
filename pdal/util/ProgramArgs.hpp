@@ -31,6 +31,8 @@
 namespace pdal
 {
 
+#pragma warning (push)
+#pragma warning (disable: 4251)
 class PDAL_DLL arg_error
 {
 public:
@@ -40,6 +42,7 @@ public:
     std::string what() const
         { return m_error; }
 
+private:
     std::string m_error;
 };
 
@@ -50,6 +53,7 @@ public:
     arg_val_error(const std::string& error) : arg_error(error)
     {}
 };
+#pragma warning (pop)
 
 namespace
 {

@@ -323,10 +323,16 @@ eb_vlr::ebfield::ebfield() :
 eb_vlr::eb_vlr()
 {}
 
+// Deprecated
 eb_vlr::eb_vlr(int ebCount)
 {
+    ebfield field;
+
     while (ebCount--)
-        addField();
+    {
+    	field.name = "FIELD_" + std::to_string(items.size());
+    	items.push_back(field);
+    }
 }
 
 eb_vlr::~eb_vlr()
@@ -407,6 +413,7 @@ std::vector<char> eb_vlr::data() const
     return buf;
 }
 
+// Deprecated
 void eb_vlr::addField()
 {
     ebfield field;

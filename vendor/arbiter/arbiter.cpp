@@ -99,6 +99,30 @@ namespace
 
         return merge(in, config);
     }
+
+#ifdef ARBITER_WINDOWS
+    std::wstring toNative(const std::string& in)
+    {
+	if (in.empty())
+            return std::wstring();
+
+        int len = MultiByteToWideChar(CP_UTF8, 0, in.data(), in.length(), nullptr, 0);
+        std::wstring out(len, 0);
+        MultiByteToWideChar(CP_UTF8, 0, in.data(), in.length(), out.data(), len);
+        return out;
+    }
+
+    std::string fromNative(const std::wstring& in)
+    {
+        if (in.empty())
+            return std::string();
+
+        int len = WideCharToMultiByte(CP_UTF8, 0, in.data(), in.length(), nullptr, 0, nullptr, nullptr);
+        std::string out(len, 0);
+        WideCharToMultiByte(CP_UTF8, 0, in.data(), in.length(), out.data(), len, nullptr, nullptr);
+        return out;
+    }
+#endif
 }
 
 Arbiter::Arbiter() : Arbiter(json().dump()) { }
@@ -1092,9 +1116,8 @@ bool mkdirp(std::string raw)
 #else
         // Use CreateDirectory instead of _mkdir; it is more reliable when creating directories on a drive other than the working path.
 
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-		const std::wstring wide(converter.from_bytes(cur));
-		const bool err(::CreateDirectoryW(wide.c_str(), NULL));
+    const std::wstring wide = toNative(cur);
+    const bool err(::CreateDirectoryW(wide.c_str(), NULL));
         if (err && ::GetLastError() != ERROR_ALREADY_EXISTS) return false;
 #endif
     }
@@ -1120,30 +1143,30 @@ namespace
     };
 
 template<typename C>
-	std::basic_string<C> remove_dups(std::basic_string<C> s, C c)
-	{
-		C cc[3] = { c, c };
-		auto pos = s.find(cc);
-		while (pos != s.npos) {
-			s.erase(pos, 1);
-			pos = s.find(cc, pos + 1);
-		}
-		return s;
-	}
+    std::basic_string<C> remove_dups(std::basic_string<C> s, C c)
+    {
+        C cc[3] = { c, c };
+        auto pos = s.find(cc);
+        while (pos != s.npos) {
+            s.erase(pos, 1);
+            pos = s.find(cc, pos + 1);
+        }
+        return s;
+    }
 
 #ifdef ARBITER_WINDOWS
-	bool icase_wchar_cmp(wchar_t a, wchar_t b)
-	{
-		return std::toupper(a, std::locale()) == std::toupper(b, std::locale());
-	}
+    bool icase_wchar_cmp(wchar_t a, wchar_t b)
+    {
+        return std::toupper(a, std::locale()) == std::toupper(b, std::locale());
+    }
 
 
-	bool icase_cmp(std::wstring const& s1, std::wstring const& s2)
-	{
-		return (s1.size() == s2.size()) &&
-			std::equal(s1.begin(), s1.end(), s2.begin(),
-				icase_wchar_cmp);
-	}
+    bool icase_cmp(std::wstring const& s1, std::wstring const& s2)
+    {
+        return (s1.size() == s2.size()) &&
+            std::equal(s1.begin(), s1.end(), s2.begin(),
+                icase_wchar_cmp);
+    }
 #endif
 
     Globs globOne(std::string path)
@@ -1173,54 +1196,52 @@ template<typename C>
 
         globfree(&buffer);
 #else
-		std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
-		std::wstring wide(converter.from_bytes(path));
+        std::wstring wide = toNative(path);
 
-		WIN32_FIND_DATAW data{};
-		LPCWSTR fname = wide.c_str();
+        WIN32_FIND_DATAW data{};
+        LPCWSTR fname = wide.c_str();
         HANDLE hFind(INVALID_HANDLE_VALUE);
-		hFind = FindFirstFileW(fname, &data);
+        hFind = FindFirstFileW(fname, &data);
 
-		if (hFind == (HANDLE)-1) return results; // bad filename
+        if (hFind == (HANDLE)-1) return results; // bad filename
 
         if (hFind != INVALID_HANDLE_VALUE )
         {
             do
             {
-				if (icase_cmp(std::wstring(data.cFileName), L".") ||
-					icase_cmp(std::wstring(data.cFileName), L".."))
-					continue;
+                if (icase_cmp(std::wstring(data.cFileName), L".") ||
+                    icase_cmp(std::wstring(data.cFileName), L".."))
+                    continue;
 
-				std::vector<wchar_t> buf(MAX_PATH);
-				wide.erase(std::remove(wide.begin(), wide.end(), '*'), wide.end());
+                std::vector<wchar_t> buf(MAX_PATH);
+                wide.erase(std::remove(wide.begin(), wide.end(), '*'), wide.end());
 
-				std::replace(wide.begin(), wide.end(), '\\', '/');
+                std::replace(wide.begin(), wide.end(), '\\', '/');
 
-				std::copy(wide.begin(), wide.end(), buf.begin()	);
+                std::copy(wide.begin(), wide.end(), buf.begin()    );
                 BOOL appended = PathAppendW(buf.data(), data.cFileName);
 
-				std::wstring output(buf.data(), wcslen( buf.data()));
+                std::wstring output(buf.data(), wcslen( buf.data()));
 
                 // Erase any \'s
                 output.erase(std::remove(output.begin(), output.end(), '\\'), output.end());
 
                 if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
-                    results.dirs.push_back(converter.to_bytes(output));
+                    results.dirs.push_back(fromNative(output));
 
                     output.append(L"/*");
-                    Globs more = globOne(converter.to_bytes(output));
+                    Globs more = globOne(fromNative(output));
                     std::copy(more.dirs.begin(), more.dirs.end(), std::back_inserter(results.dirs));
                     std::copy(more.files.begin(), more.files.end(), std::back_inserter(results.files));
 
                 }
 
-				results.files.push_back(
-					converter.to_bytes(output));
+                results.files.push_back(fromNative(output));
             }
             while (FindNextFileW(hFind, &data));
         }
-		FindClose(hFind);
+        FindClose(hFind);
 #endif
 
         return results;
