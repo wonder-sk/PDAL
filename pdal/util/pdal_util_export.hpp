@@ -43,9 +43,9 @@
 #   define PDAL_DLL_UNIX
 #   define PDAL_LOCAL
 #else
-#   define PDAL_DLL     __attribute__ ((visibility("default")))
-#   define PDAL_WIN
-#   define PDAL_UNIX    __attribute__ ((visibility("default")))
-#   define PDAL_LOCAL   __attribute__((visibility("hidden")))
+#   define PDAL_DLL        __attribute__ ((visibility("default")))
+#   define PDAL_DLL_WIN    __attribute__((visibility("hidden")))
+#   define PDAL_DLL_UNIX   __attribute__ ((visibility("default")))
+#   define PDAL_LOCAL      __attribute__((visibility("hidden")))
 #endif // _WIN32
 
