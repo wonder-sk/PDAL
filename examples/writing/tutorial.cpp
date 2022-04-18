@@ -53,12 +53,11 @@ int main(int argc, char* argv[])
 
     StageFactory factory;
 
-    // Set second argument to 'true' to let factory take ownership of
-    // stage and facilitate clean up.
-    Stage *writer = factory.createStage("writers.las");
+    // StageFactory always "owns" stages it creates. They'll be destroyed with the factory.
+    Stage& writer = *factory.createStage("writers.las");
 
-    writer->setInput(reader);
-    writer->setOptions(options);
-    writer->prepare(table);
-    writer->execute(table);
+    writer.setInput(reader);
+    writer.setOptions(options);
+    writer.prepare(table);
+    writer.execute(table);
 }
