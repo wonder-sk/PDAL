@@ -203,6 +203,15 @@ void CopcReader::initialize(PointTableRef table)
 
     // alert consumers that we are a COPC file
     m.add("copc", true);
+    m.add("center_x", m_p->copc_info.center_x);
+    m.add("center_y", m_p->copc_info.center_y);
+    m.add("center_z", m_p->copc_info.center_z);
+    m.add("halfsize", m_p->copc_info.halfsize);
+    m.add("spacing", m_p->copc_info.spacing);
+    m.add("root_hier_offset", m_p->copc_info.root_hier_offset);
+    m.add("root_hier_size", m_p->copc_info.root_hier_size);
+    m.add("gpstime_minimum", m_p->copc_info.gpstime_minimum);
+    m.add("gpstime_maximum", m_p->copc_info.gpstime_maximum);
 
     fetchHeader();
     las::extractHeaderMetadata(m_p->header, forward, m);
